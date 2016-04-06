@@ -1,0 +1,18 @@
+{
+	"author": {
+		"name": "Sven, mailsvb@gmail.com"
+	},
+	"description": "node-red twitter streaming API node",
+	"name": "node-red-twitter-stream",
+	"keywords": [ "node-red", "twitter", "stream" ],
+	"node-red": {
+		"nodes": {
+			"twitter-stream": "twitter/twitter.js"
+		}
+	},
+	"license": "MIT",
+	"dependencies": {
+		"twitter": "^1.2.5"
+	},
+	"version": "1.0.1"
+}
