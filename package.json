@@ -2,7 +2,7 @@
 	"author": {
 		"name": "Sven, mailsvb@gmail.com"
 	},
-	"description": "node-red twitter streaming API node",
+	"description": "node-red node for accessing the Twitter streaming API",
 	"name": "node-red-twitter-stream",
 	"keywords": [ "node-red", "twitter", "stream" ],
 	"node-red": {

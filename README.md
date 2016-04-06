@@ -1,5 +1,5 @@
 # node-red-twitter-stream
-This node is for accessing the Twitter streaming API. It is based on the twitter npm package.
+node-red node for accessing the Twitter streaming API (based on https://github.com/desmondmorris/node-twitter/)
 
 ## Installation
 npm -g install node-red-twitter-stream
