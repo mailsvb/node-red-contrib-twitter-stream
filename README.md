@@ -1,8 +1,8 @@
-# node-red-twitter-stream
+# node-red-contrib-twitter-stream
 node-red node for accessing the Twitter streaming API (based on https://github.com/desmondmorris/node-twitter/)
 
 ## Installation
-npm -g install node-red-twitter-stream
+npm -g install node-red-contrib-twitter-stream
 
 ## Features
 - connect to the Twitter streaming API and get tweets of specific users (follow)

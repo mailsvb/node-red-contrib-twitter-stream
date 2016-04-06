@@ -2,8 +2,8 @@
 	"author": {
 		"name": "Sven, mailsvb@gmail.com"
 	},
-	"description": "node-red node for accessing the Twitter streaming API",
-	"name": "node-red-twitter-stream",
+	"description": "node-red twitter streaming API node",
+	"name": "node-red-contrib-twitter-stream",
 	"keywords": [ "node-red", "twitter", "stream" ],
 	"node-red": {
 		"nodes": {
@@ -14,5 +14,10 @@
 	"dependencies": {
 		"twitter": "^1.2.5"
 	},
-	"version": "1.0.1"
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/mailsvb/node-red-contrib-twitter-stream.git"
+	},
+	"homepage": "https://github.com/mailsvb/node-red-contrib-twitter-stream#readme",
+	"version": "1.0.0"
 }
