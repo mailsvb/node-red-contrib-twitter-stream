@@ -26,7 +26,7 @@
             consumerKey: {value:"", required:true},
             consumerSecret: {value:"", required:true},
             accessToken: {value:"", required:true},
-			accessSecret: {value:"", required:true},
+            accessSecret: {value:"", required:true},
         },
         label: function() {
             return this.consumerKey;
@@ -34,7 +34,7 @@
     });
 </script>
 
-<!-- Twitter streaming API for users --> 
+<!-- Twitter streaming API --> 
 
 <script type="text/x-red" data-template-name="Twitter Users">
     <div class="form-row">
@@ -42,40 +42,45 @@
         <input type="text" id="node-input-connection">
     </div>
     <div class="form-row">
-        <label for="node-input-follow"><i class="icon-bookmark"></i> Screen name</label>
+        <label for="node-input-follow"><i class="icon-bookmark"></i> Twitter Users</label>
         <input type="text" id="node-input-follow">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-bookmark"></i> Node name</label>
+        <input type="text" id="node-input-name">
     </div>
 </script>
 
 <script type="text/x-red" data-help-name="Twitter Users">
     <p><b>Twitter stream user tweets</b></p>
-    <p>Receive Tweets from specific users via the streaming API.</p>
-	<p>The following is required before you can continue
-	<li>Twitter development account</br><a href="https://dev.twitter.com">dev.twitter.com</a></li>
-	<li>Twitter application </br><a href="https://apps.twitter.com">apps.twitter.com</a></li>
-	</p>
-	<p>Requirements for this node
-	<li>Twitter application Consumer/Access credentials</li>
-	<li>comma seperated list of Twitter account names</li>
-	</p>
+    <p>Receive Tweets via the streaming API from specific users.</p>
+    <p>The following is required before you can continue
+    <li>Twitter development account</br><a href="https://dev.twitter.com">dev.twitter.com</a></li>
+    <li>Twitter application </br><a href="https://apps.twitter.com">apps.twitter.com</a></li>
+    </p>
+    <p>Requirements for this node
+    <li>Twitter application Consumer/Access credentials</li>
+    <li>comma seperated list of Twitter account names</li>
+    </p>
 </script>
 
 <script type="text/javascript">
     RED.nodes.registerType('Twitter Users',{
-        category: 'input',      
+        category: 'input',
         defaults: {
             connection: {value:"",type:"twitter-api-connection"},
             follow: {value:"",required:true},
+            name: {value:"",required:false},
         },
         color: "#4099fe",
         inputs:0,
         outputs:1,
         icon: "twitter.png",
         label: function() {
-            return this.name||this.topic||"Twitter user stream";
+            return this.name||this.follow||"Twitter user stream";
         },
         labelStyle: function() {
-            return this.name?"node_label_italic":"";
+            return this.follow?"node_label_italic":"";
         }
     });
 </script>
@@ -89,40 +94,45 @@
         <input type="text" id="node-input-connection">
     </div>
     <div class="form-row">
-        <label for="node-input-topics"><i class="icon-bookmark"></i> Topic name</label>
+        <label for="node-input-topics"><i class="icon-bookmark"></i> Twitter topics</label>
         <input type="text" id="node-input-topics">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-bookmark"></i> Node name</label>
+        <input type="text" id="node-input-name">
     </div>
 </script>
 
 <script type="text/x-red" data-help-name="Twitter Topics">
-	<p><b>Twitter stream topic tweets</b></p>
-    <p>Receive Tweets via the streaming API for specific topics</p>
-	<p>The following is required before you can continue
-	<li>Twitter development account</br><a href="https://dev.twitter.com">dev.twitter.com</a></li>
-	<li>Twitter application </br><a href="https://apps.twitter.com">apps.twitter.com</a></li>
-	</p>
-	<p>Requirements for this node
-	<li>Twitter application Consumer/Access credentials</li>
-	<li>comma seperated list of hashtags or search strings</li>
-	</p>
+    <p><b>Twitter stream topic tweets</b></p>
+    <p>Receive Tweets for specific topics via the streaming API</p>
+    <p>The following is required before you can continue
+    <li>Twitter development account</br><a href="https://dev.twitter.com">dev.twitter.com</a></li>
+    <li>Twitter application </br><a href="https://apps.twitter.com">apps.twitter.com</a></li>
+    </p>
+    <p>Requirements for this node
+    <li>Twitter application Consumer/Access credentials</li>
+    <li>comma seperated list of hashtags or search strings</li>
+    </p>
 </script>
 
 <script type="text/javascript">
     RED.nodes.registerType('Twitter Topics',{
-        category: 'input',      
+        category: 'input',
         defaults: {
             connection: {value:"",type:"twitter-api-connection"},
             topics: {value:"",required:true},
+            name: {value:"",required:false},
         },
         color: "#4099fe",
         inputs:0,
         outputs:1,
         icon: "twitter.png",
         label: function() {
-            return this.name||this.topic||"Twitter topic stream";
+            return this.name||this.topics||"Twitter topic stream";
         },
         labelStyle: function() {
-            return this.name?"node_label_italic":"";
+            return this.topics?"node_label_italic":"";
         }
     });
 </script>

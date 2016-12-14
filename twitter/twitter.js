@@ -1,8 +1,7 @@
 module.exports = function(RED) {
-    try {
     "use strict";
-    var util = require('util');
-    var Twitter = require('twitter');
+    const util = require('util');
+    const Twit = require('twit');
 
     var clients = {};
 
@@ -17,85 +16,95 @@ module.exports = function(RED) {
 
         var id = node.consumerKey;
 
-
-        util.log('[Twitter-Stream] - create new Twitter instance for: ' + id);
-        clients[id] = new Twitter({
+        node.log('create new Twitter instance for: ' + id);
+        
+        clients[id] = new Twit({
             consumer_key: node.consumerKey,
             consumer_secret: node.consumerSecret,
-            access_token_key: node.accessToken,
-            access_token_secret: node.accessSecret,
-        });
+            access_token: node.accessToken,
+            access_token_secret: node.accessSecret
+        })
         
         node.client = clients[id];
 
         this.on("close", function() {
-            util.log('[Twitter-Stream] - delete Twitter instance on close event');
+            node.log('delete Twitter instance on close event');
             delete clients[id];
         });
     }
     RED.nodes.registerType("twitter-api-connection",TwitterAPIConnection);
 
     //Twitter stream of users
-    function TwitterStreamUsers(n) {
+    function TwitterStreamUser(n) {
         RED.nodes.createNode(this,n);
         var node = this;
         node.follow = n.follow;
         node.connection = RED.nodes.getNode(n.connection);
-        node.status({fill:"red",shape:"dot",text:"connecting"});
+        node.status({fill:"yellow",shape:"dot",text:"connecting"});
         
-        node.connection.client.get('users/lookup', {screen_name: node.follow}, function(error, tweets, response){
+        node.connection.client.get('users/lookup', {screen_name: node.follow}, function(error, data, response){
             if (error) {
                 node.status({fill:"red",shape:"dot",text:"error"});
-                util.log('[Twitter-Stream] - ERR: ' + error);
+                node.error(util.inspect(error, { showHidden: true, depth: null }));
                 return;
             }
             try {
-                var all_screen_names = JSON.parse(response.body);
                 var all_IDs = [];
                 var all_names = [];
-                for (var i=0; i < all_screen_names.length; i++)
+                for (var i=0; i < data.length; i++)
                 {
-                    all_IDs.push(all_screen_names[i].id_str.toString());
-                    all_names.push(all_screen_names[i].name.toString());
+                    all_IDs.push(data[i].id_str.toString());
+                    all_names.push(data[i].name.toString());
                 }
+                node.log('streaming IDs: ' + all_IDs.join(', ').toString());
                 
-                node.connection.client.stream('statuses/filter', { follow: all_IDs.join(',').toString() }, function(stream){
-                    util.log('[Twitter-Stream] - streaming names: ' + all_names.join(', ').toString());
-                    util.log('[Twitter-Stream] - streaming IDs: ' + all_IDs.join(', ').toString());
+                node.stream = node.connection.client.stream('statuses/filter', { follow: all_IDs.join(',').toString() });
+                
+                node.stream.on('connect', function (request) {
+                    node.log('streaming API connecting');
+                    node.status({fill:"yellow",shape:"dot",text:"connecting"});
+                });
+                
+                node.stream.on('connected', function (response) {
+                    node.log('streaming API connected. Streaming names: ' + all_names.join(', ').toString());
                     node.status({fill:"green",shape:"dot",text:"connected"});
+                });
+                
+                node.stream.on('disconnect', function (disconnectMessage) {
+                    node.log('streaming API disconnected ' + util.inspect(disconnectMessage, { showHidden: true, depth: null }));
+                    node.status({fill:"red",shape:"dot",text:"disconnected"});
+                });
+                
+                node.stream.on('reconnect', function (request, response, connectInterval) {
+                    node.log('streaming API reconnecting');
+                    node.status({fill:"yellow",shape:"dot",text:"reconnecting"});
+                });
                     
-                    node.stream = stream;
-                    
-                    stream.on('data', function(tweet) {
-                        if (all_IDs.indexOf(tweet.user.id_str) > -1)
-                        {
-                            util.log('[Twitter-Stream] - ' + tweet.user.name + ': ' + tweet.text);
-                            var msg = {
-                                payload: tweet
-                            }
-                            node.send(msg);
+                node.stream.on('tweet', function(tweet) {
+                    if (all_IDs.indexOf(tweet.user.id_str) > -1)
+                    {
+                        node.log(tweet.user.name + ': ' + tweet.text);
+                        var msg = {
+                            payload: tweet
                         }
-                    });
-                    
-                    stream.on('error', function(error) {
-                        node.status({fill:"red",shape:"dot",text:"error"});
-                        util.log('[Twitter-Stream] - ERR: ' + error);
-                    });
+                        node.send(msg);
+                    }
                 });
             }
-            catch (e) {
-                util.log('[Twitter-Stream] - ERR: ' + e);
+            catch (error) {
+                node.error(util.inspect(error, { showHidden: true, depth: null }));
             }
         });
         
         this.on("close", function() {
             if (node.stream) {
-                util.log('[Twitter-Stream] - stopping stream on close');
-                node.stream.destroy();
+                node.log('stopping stream on close');
+                node.stream.stop();
+                delete node.stream;
             }
         });
     }
-    RED.nodes.registerType("Twitter Users",TwitterStreamUsers);
+    RED.nodes.registerType("Twitter Users",TwitterStreamUser);
     
         //Twitter stream of topics
     function TwitterStreamTopics(n) {
@@ -103,39 +112,45 @@ module.exports = function(RED) {
         var node = this;
         node.topics = n.topics;
         node.connection = RED.nodes.getNode(n.connection);
-        node.status({fill:"red",shape:"dot",text:"connecting"});
+        node.status({fill:"yellow",shape:"dot",text:"connecting"});
         
-        node.connection.client.stream('statuses/filter', {track: node.topics}, function(stream){
-            util.log('[Twitter-Stream] - streaming topics: ' + node.topics);
+        node.stream = node.connection.client.stream('statuses/filter', {track: node.topics});
+        
+        node.stream.on('connect', function (request) {
+            node.log('streaming API connecting');
+            node.status({fill:"yellow",shape:"dot",text:"connecting"});
+        });
+        
+        node.stream.on('connected', function (response) {
+            node.log('streaming topics: ' + node.topics);
             node.status({fill:"green",shape:"dot",text:"connected"});
+        });
+        
+        node.stream.on('disconnect', function (disconnectMessage) {
+            node.log('streaming API disconnected ' + util.inspect(disconnectMessage, { showHidden: true, depth: null }));
+            node.status({fill:"red",shape:"dot",text:"disconnected"});
+        });
+        
+        node.stream.on('reconnect', function (request, response, connectInterval) {
+            node.log('streaming API reconnecting');
+            node.status({fill:"yellow",shape:"dot",text:"reconnecting"});
+        });
             
-            node.stream = stream;
-            
-            stream.on('data', function(tweet) {
-                util.log('[Twitter-Stream] - Tweet: ' + tweet.text);
-                var msg = {
-                    payload: tweet
-                }
-                node.send(msg);
-            });
-            
-            stream.on('error', function(error) {
-                node.status({fill:"red",shape:"dot",text:"error"});
-                util.log('[Twitter-Stream] - ERR: ' + error);
-            });
+        node.stream.on('tweet', function(tweet) {
+            node.log(tweet.user.name + ': ' + tweet.text);
+            var msg = {
+                payload: tweet
+            }
+            node.send(msg);
         });
         
         this.on("close", function() {
             if (node.stream) {
-                util.log('[Twitter-Stream] - stopping stream on close');
-                node.stream.destroy();
+                node.log('stopping stream on close');
+                node.stream.stop();
+                delete node.stream;
             }
         });
     }
     RED.nodes.registerType("Twitter Topics",TwitterStreamTopics);
-    
-    }
-    catch(e){
-        console.log(e);
-    }
 }
