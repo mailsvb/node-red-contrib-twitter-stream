@@ -2,20 +2,20 @@
 
 <script type="text/x-red" data-template-name="twitter-api-connection">
     <div class="form-row">
-        <label for="node-config-input-consumerKey"><i class="icon-bookmark"></i> Consumer Key</label>
-        <input type="text" id="node-config-input-consumerKey">
+        <label for="node-config-input-consumerKey" style="width:30%"><i class="icon-bookmark"></i> Consumer Key</label>
+        <input type="text" id="node-config-input-consumerKey" style="width:65%">
     </div>
     <div class="form-row">
-        <label for="node-config-input-consumerSecret"><i class="icon-bookmark"></i> Consumer Secret</label>
-        <input type="text" id="node-config-input-consumerSecret">
+        <label for="node-config-input-consumerSecret" style="width:30%"><i class="icon-bookmark"></i> Consumer Secret</label>
+        <input type="text" id="node-config-input-consumerSecret" style="width:65%">
     </div>
     <div class="form-row">
-        <label for="node-config-input-accessToken"><i class="icon-bookmark"></i> Access Token</label>
-        <input type="text" id="node-config-input-accessToken">
+        <label for="node-config-input-accessToken" style="width:30%"><i class="icon-bookmark"></i> Access Token</label>
+        <input type="text" id="node-config-input-accessToken" style="width:65%">
     </div>
     <div class="form-row">
-        <label for="node-config-input-accessSecret"><i class="icon-bookmark"></i> Access Secret</label>
-        <input type="text" id="node-config-input-accessSecret">
+        <label for="node-config-input-accessSecret" style="width:30%"><i class="icon-bookmark"></i> Access Secret</label>
+        <input type="text" id="node-config-input-accessSecret" style="width:65%">
     </div>
 </script>
 
@@ -133,6 +133,82 @@
         },
         labelStyle: function() {
             return this.topics?"node_label_italic":"";
+        }
+    });
+</script>
+
+<!-- Twitter streaming API --> 
+
+<script type="text/x-red" data-template-name="Twitter Stream">
+    <div class="form-row">
+        <label for="node-input-connection" style="width:25%"><i class="fa fa-server"></i> Connection</label>
+        <input type="text" id="node-input-connection">
+    </div>
+    <div class="form-row">
+        <label for="node-input-follow" style="width:25%"><i class="icon-bookmark"></i> Twitter users</label>
+        <input type="text" id="node-input-follow">
+    </div>
+    <div class="form-row">
+        <label for="node-input-topics" style="width:25%"><i class="icon-bookmark"></i> Twitter topics</label>
+        <input type="text" id="node-input-topics">
+    </div>
+    <div class="form-row">
+        <label for="node-input-topicLanguage" style="width:25%">Language</label>
+        <input type="text" id="node-input-topicLanguage" placeholder="en,de">
+        <div class="form-tips"><span>Comma seperated list of languages to filter for. Get complete list at <a href="https://dev.twitter.com/rest/reference/get/help/languages" target="_blank">dev.twitter.com</a></span></div>
+    </div>
+    <div class="form-row">
+        <label style="width:25%">Retweets?</label>
+        <input type="checkbox" id="node-input-topicRetweets" style="width:auto; vertical-align:top;">
+        <label for="node-input-topicRetweets" style="width:auto;"> Include retweets for topics</label>
+    </div>
+    <div class="form-row">
+        <label style="width:25%">Debug?</label>
+        <input type="checkbox" id="node-input-debug" style="width:auto; vertical-align:top;">
+        <label for="node-input-debug" style="width:auto;"> Enable debug logging</label>
+    </div>
+    <div class="form-row">
+        <label for="node-input-name" style="width:25%"><i class="icon-bookmark"></i> Node name</label>
+        <input type="text" id="node-input-name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="Twitter Stream">
+    <p><b>Get tweets via the Twitter streaming API</b></p>
+    <p>Receive Tweets from specific users and/or for specific topics</p>
+    <p>The following is required before you can continue
+    <li>Twitter development account</br><a href="https://dev.twitter.com">dev.twitter.com</a></li>
+    <li>Twitter application </br><a href="https://apps.twitter.com">apps.twitter.com</a></li>
+    </p>
+    <p>Requirements for this node
+    <li>Twitter application Consumer/Access credentials</li>
+    <li>Provide a comma seperated list of twitter user names and/or hashtags, topics, etc.</li>
+    <li>Filter retweets</li>
+    <li>Filter languages by selecting the ones you are interested in</li>
+    </p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('Twitter Stream',{
+        category: 'input',
+        defaults: {
+            connection: {value:"",type:"twitter-api-connection"},
+            follow: {value:"",required:false},
+            topics: {value:"",required:false},
+            topicRetweets: {value:false},
+            topicLanguage: {value:"en,de"},
+            debug: {value:false},
+            name: {value:"",required:false},
+        },
+        color: "#4099fe",
+        inputs:0,
+        outputs:1,
+        icon: "twitter.png",
+        label: function() {
+            return this.name||"Twitter Stream";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
         }
     });
 </script>

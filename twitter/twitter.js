@@ -153,4 +153,107 @@ module.exports = function(RED) {
         });
     }
     RED.nodes.registerType("Twitter Topics",TwitterStreamTopics);
+    
+    //Twitter stream
+    function TwitterStream(n) {
+        RED.nodes.createNode(this,n);
+        var node = this;
+        node.follow = n.follow || "";
+        node.topics = n.topics || "";
+        node.topicRetweets = n.topicRetweets || false;
+        node.topicLanguage = n.topicLanguage.toString().trim().split(",") || ['en','de'];
+        node.debug = n.debug || false;
+        node.waitForUserLookup = false;
+        node.userNames = [];
+        node.userIDs = [];
+        node.streamOptions = {};
+        node.connection = RED.nodes.getNode(n.connection);
+        node.status({fill:"yellow",shape:"dot",text:"connecting"});
+        
+        if (node.topics != "") {
+            node.streamOptions.track = node.topics;
+        }
+        
+        if (node.follow != "") {
+            node.waitForUserLookup = true;
+            node.connection.client.get('users/lookup', {screen_name: node.follow}, function(error, data, response){
+                if (error) {
+                    node.status({fill:"yellow",shape:"dot",text:"error user/lookup"});
+                    node.error(util.inspect(error, { showHidden: true, depth: null }));
+                }
+                try {
+                    for (var i=0; i < data.length; i++)
+                    {
+                        node.userIDs.push(data[i].id_str.toString());
+                        node.userNames.push(data[i].name.toString());
+                    }
+                    node.streamOptions.follow = node.userIDs.join(',').toString();
+                    node.log('streaming IDs: ' + node.streamOptions.follow);
+                    node.log('streaming Names: ' + node.userNames.join(',').toString());
+                }
+                catch (error) {
+                    node.error(util.inspect(error, { showHidden: true, depth: null }));
+                }
+                node.waitForUserLookup = false;
+            });
+        }
+        
+        let startInterval = setInterval(() => {
+            if (node.waitForUserLookup === false) {
+                node.stream = node.connection.client.stream('statuses/filter', node.streamOptions);
+                node.stream.on('connect', function (request) {
+                    node.log('streaming API connecting');
+                    node.status({fill:"yellow",shape:"dot",text:"connecting"});
+                });
+                
+                node.stream.on('connected', function (response) {
+                    node.log('streaming API connected ' + util.inspect(node.streamOptions, { showHidden: true, depth: null }));
+                    node.status({fill:"green",shape:"dot",text:"connected"});
+                });
+                
+                node.stream.on('disconnect', function (disconnectMessage) {
+                    node.log('streaming API disconnected ' + util.inspect(disconnectMessage, { showHidden: true, depth: null }));
+                    node.status({fill:"red",shape:"dot",text:"disconnected"});
+                });
+                
+                node.stream.on('reconnect', function (request, response, connectInterval) {
+                    node.log('streaming API reconnecting');
+                    node.status({fill:"yellow",shape:"dot",text:"reconnecting"});
+                });
+                    
+                node.stream.on('tweet', function(tweet) {
+                    if (node.topicRetweets === false && node.userIDs.indexOf(tweet.user.id_str) < 0 && tweet.retweeted_status) {
+                        if (node.debug) {
+                            node.log('skipping retweet:\n' + util.inspect(tweet, { showHidden: true, depth: null }));
+                        }
+                    }
+                    else {
+                        if (node.topicLanguage.indexOf(tweet.lang) > -1) {
+                            node.send({ payload: tweet });
+                            if (node.debug) {
+                                node.log(util.inspect(tweet, { showHidden: true, depth: null }));
+                            } else {
+                                node.log(tweet.user.name + ': ' + tweet.text);
+                            }
+                        }
+                        else {
+                            if (node.debug) {
+                                node.log('skipping language:\n' + util.inspect(tweet, { showHidden: true, depth: null }));
+                            }
+                        }
+                    }
+                });
+                clearInterval(startInterval);
+            }
+        }, 100);
+
+        this.on("close", function() {
+            if (node.stream) {
+                node.log('stopping stream on close');
+                node.stream.stop();
+                delete node.stream;
+            }
+        });
+    }
+    RED.nodes.registerType("Twitter Stream",TwitterStream);
 }
