@@ -1,3 +1,5 @@
+const http = require('http');
+
 module.exports = function(RED) {
     "use strict";
     const util = require('util');
@@ -23,7 +25,7 @@ module.exports = function(RED) {
             consumer_secret: node.consumerSecret,
             access_token: node.accessToken,
             access_token_secret: node.accessSecret
-        })
+        });
         
         node.client = clients[id];
 
@@ -86,7 +88,7 @@ module.exports = function(RED) {
                         node.log(tweet.user.name + ': ' + tweet.text);
                         var msg = {
                             payload: tweet
-                        }
+                        };
                         node.send(msg);
                     }
                 });
@@ -140,7 +142,7 @@ module.exports = function(RED) {
             node.log(tweet.user.name + ': ' + tweet.text);
             var msg = {
                 payload: tweet
-            }
+            };
             node.send(msg);
         });
         
@@ -162,6 +164,7 @@ module.exports = function(RED) {
         node.topics = n.topics || "";
         node.topicRetweets = n.topicRetweets || false;
         node.topicLanguage = n.topicLanguage.toString().trim().split(",") || ['en','de'];
+        node.loadImages = n.loadImages || false;
         node.debug = n.debug || false;
         node.waitForUserLookup = false;
         node.userNames = [];
@@ -170,11 +173,11 @@ module.exports = function(RED) {
         node.connection = RED.nodes.getNode(n.connection);
         node.status({fill:"yellow",shape:"dot",text:"connecting"});
         
-        if (node.topics != "") {
+        if (node.topics !== "") {
             node.streamOptions.track = node.topics;
         }
         
-        if (node.follow != "") {
+        if (node.follow !== "") {
             node.waitForUserLookup = true;
             node.connection.client.get('users/lookup', {screen_name: node.follow}, function(error, data, response){
                 if (error) {
@@ -222,26 +225,20 @@ module.exports = function(RED) {
                 });
                     
                 node.stream.on('tweet', function(tweet) {
+                    
+                    (node.debug === true) ? node.log(util.inspect(tweet, { showHidden: true, depth: null })) : node.log(tweet.user.name + ': ' + tweet.text);
+                    
                     if (node.topicRetweets === false && node.userIDs.indexOf(tweet.user.id_str) < 0 && tweet.retweeted_status) {
-                        if (node.debug) {
-                            node.log('skipping retweet:\n' + util.inspect(tweet, { showHidden: true, depth: null }));
-                        }
+                        node.log('skipping retweet https://twitter.com/statuses/' + tweet.id_str);
+                        return;
                     }
-                    else {
-                        if (node.topicLanguage.indexOf(tweet.lang) > -1) {
-                            node.send({ payload: tweet });
-                            if (node.debug) {
-                                node.log(util.inspect(tweet, { showHidden: true, depth: null }));
-                            } else {
-                                node.log(tweet.user.name + ': ' + tweet.text);
-                            }
-                        }
-                        else {
-                            if (node.debug) {
-                                node.log('skipping language:\n' + util.inspect(tweet, { showHidden: true, depth: null }));
-                            }
-                        }
+                    if (node.topicLanguage.indexOf(tweet.lang) < 0) {
+                        node.log('skipping language https://twitter.com/statuses/' + tweet.id_str);
+                        return;
                     }
+                    asyncLoadAndSend(node.loadImages, tweet, (tweet) => {
+                        node.send({payload: tweet});
+                    });
                 });
                 clearInterval(startInterval);
             }
@@ -256,4 +253,28 @@ module.exports = function(RED) {
         });
     }
     RED.nodes.registerType("Twitter Stream",TwitterStream);
-}
+};
+
+const asyncLoadAndSend = (getImages, tweet, cb) => {
+    if (getImages === true && tweet.entities && tweet.entities.media) {
+        let run = 0;
+        for (var i=0; i < tweet.entities.media.length; i++) {
+            (function(tweet, i) {
+                http.get(tweet.entities.media[i].media_url, (res) => {
+                    let data = [];
+                    res.on('data', (chunk) => data.push(chunk));
+                    res.on('end', () => { 
+                        run++;
+                        tweet.entities.media[i].buffer = Buffer.concat(data);
+                        if (run == tweet.entities.media.length) {
+                            cb(tweet);
+                        }
+                    });
+                });
+            })(tweet, i);
+        }
+    }
+    else {
+        cb(tweet);
+    }
+};
