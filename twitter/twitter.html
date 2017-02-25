@@ -36,109 +36,6 @@
 
 <!-- Twitter streaming API --> 
 
-<script type="text/x-red" data-template-name="Twitter Users">
-    <div class="form-row">
-        <label for="node-input-connection"><i class="fa fa-server"></i> Connection</label>
-        <input type="text" id="node-input-connection">
-    </div>
-    <div class="form-row">
-        <label for="node-input-follow"><i class="icon-bookmark"></i> Twitter Users</label>
-        <input type="text" id="node-input-follow">
-    </div>
-    <div class="form-row">
-        <label for="node-input-name"><i class="icon-bookmark"></i> Node name</label>
-        <input type="text" id="node-input-name">
-    </div>
-</script>
-
-<script type="text/x-red" data-help-name="Twitter Users">
-    <p><b>Twitter stream user tweets</b></p>
-    <p>Receive Tweets via the streaming API from specific users.</p>
-    <p>The following is required before you can continue
-    <li>Twitter development account</br><a href="https://dev.twitter.com">dev.twitter.com</a></li>
-    <li>Twitter application </br><a href="https://apps.twitter.com">apps.twitter.com</a></li>
-    </p>
-    <p>Requirements for this node
-    <li>Twitter application Consumer/Access credentials</li>
-    <li>comma seperated list of Twitter account names</li>
-    </p>
-</script>
-
-<script type="text/javascript">
-    RED.nodes.registerType('Twitter Users',{
-        category: 'input',
-        defaults: {
-            connection: {value:"",type:"twitter-api-connection"},
-            follow: {value:"",required:true},
-            name: {value:"",required:false},
-        },
-        color: "#4099fe",
-        inputs:0,
-        outputs:1,
-        icon: "twitter.png",
-        label: function() {
-            return this.name||this.follow||"Twitter user stream";
-        },
-        labelStyle: function() {
-            return this.follow?"node_label_italic":"";
-        }
-    });
-</script>
-
-
-<!-- Twitter streaming API filtering for topics --> 
-
-<script type="text/x-red" data-template-name="Twitter Topics">
-    <div class="form-row">
-        <label for="node-input-connection"><i class="fa fa-server"></i> Connection</label>
-        <input type="text" id="node-input-connection">
-    </div>
-    <div class="form-row">
-        <label for="node-input-topics"><i class="icon-bookmark"></i> Twitter topics</label>
-        <input type="text" id="node-input-topics">
-    </div>
-    <div class="form-row">
-        <label for="node-input-name"><i class="icon-bookmark"></i> Node name</label>
-        <input type="text" id="node-input-name">
-    </div>
-</script>
-
-<script type="text/x-red" data-help-name="Twitter Topics">
-    <p><b>Twitter stream topic tweets</b></p>
-    <p>Receive Tweets for specific topics via the streaming API</p>
-    <p>The following is required before you can continue
-    <li>Twitter development account</br><a href="https://dev.twitter.com">dev.twitter.com</a></li>
-    <li>Twitter application </br><a href="https://apps.twitter.com">apps.twitter.com</a></li>
-    </p>
-    <p>Requirements for this node
-    <li>Twitter application Consumer/Access credentials</li>
-    <li>comma seperated list of hashtags or search strings</li>
-    </p>
-</script>
-
-<script type="text/javascript">
-    RED.nodes.registerType('Twitter Topics',{
-        category: 'input',
-        defaults: {
-            connection: {value:"",type:"twitter-api-connection"},
-            topics: {value:"",required:true},
-            name: {value:"",required:false},
-        },
-        color: "#4099fe",
-        inputs:0,
-        outputs:1,
-        icon: "twitter.png",
-        label: function() {
-            return this.name||this.topics||"Twitter topic stream";
-        },
-        labelStyle: function() {
-            return this.topics?"node_label_italic":"";
-        }
-    });
-</script>
-
-<!-- Twitter streaming API --> 
-
 <script type="text/x-red" data-template-name="Twitter Stream">
     <div class="form-row">
         <label for="node-input-connection" style="width:25%"><i class="fa fa-server"></i> Connection</label>
@@ -158,9 +55,24 @@
         <div class="form-tips"><span>Comma seperated list of languages to filter for. Get complete list at <a href="https://dev.twitter.com/rest/reference/get/help/languages" target="_blank">dev.twitter.com</a></span></div>
     </div>
     <div class="form-row">
+        <label for="node-input-tweetLimit" style="width:25%">Tweet limit/min</label>
+        <select type="text" id="node-input-tweetLimit">
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="30">30</option>
+            <option value="45">45</option>
+            <option value="60">60</option>
+        </select>
+    </div>
+    <div class="form-row">
         <label style="width:25%">Retweets?</label>
         <input type="checkbox" id="node-input-topicRetweets" style="width:auto; vertical-align:top;">
         <label for="node-input-topicRetweets" style="width:auto;"> Include retweets for topics</label>
+    </div>
+    <div class="form-row">
+        <label style="width:25%">Verified?</label>
+        <input type="checkbox" id="node-input-alwaysVerified" style="width:auto; vertical-align:top;">
+        <label for="node-input-alwaysVerified" style="width:auto;"> Always include tweets from verified accounts</label>
     </div>
     <div class="form-row">
         <label style="width:25%">Images?</label>
@@ -200,7 +112,9 @@
             connection: {value:"",type:"twitter-api-connection"},
             follow: {value:"",required:false},
             topics: {value:"",required:false},
+            tweetLimit: {value:"10"},
             topicRetweets: {value:false},
+            alwaysVerified: {value:false},
             loadImages: {value:false},
             topicLanguage: {value:"en,de"},
             debug: {value:false},
