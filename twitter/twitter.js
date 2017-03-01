@@ -42,9 +42,9 @@ module.exports = function(RED) {
         var node = this;
         node.follow = n.follow || "";
         node.topics = n.topics || "";
-        node.tweetLimit = parseInt(n.tweetLimit) || 10;
+        node.tweetLimit = parseInt(n.tweetLimit) || 0;
+        node.onlyVerified = n.onlyVerified || false;
         node.topicRetweets = n.topicRetweets || false;
-        node.alwaysVerified = n.alwaysVerified || false;
         node.topicLanguage = n.topicLanguage.toString().trim().split(",") || ['en','de'];
         node.loadImages = n.loadImages || false;
         node.debug = n.debug || false;
@@ -52,7 +52,7 @@ module.exports = function(RED) {
         node.userNames = [];
         node.userIDs = [];
         node.streamOptions = {};
-        node.tweetLimitCount = 0;
+        node.tweetCount = 0;
         node.connection = RED.nodes.getNode(n.connection);
         node.status({fill:"yellow",shape:"dot",text:"connecting"});
         
@@ -111,33 +111,41 @@ module.exports = function(RED) {
                     
                     (node.debug === true) ? node.log(util.inspect(tweet, { showHidden: true, depth: null })) : node.log(tweet.user.name + ': ' + tweet.text);
                     
-                    if (node.topicRetweets === false && node.userIDs.indexOf(tweet.user.id_str) < 0 && tweet.retweeted_status) {
-                        if (node.alwaysVerified === true && tweet.user.verified === true) {
-                            node.log('always include tweets from verified accounts https://twitter.com/statuses/' + tweet.id_str);
-                        } else {
-                            node.log('skipping retweet https://twitter.com/statuses/' + tweet.id_str);
-                            return;
-                        }
+                    // if followed user, immediatelly send tweet
+                    if (node.userIDs.indexOf(tweet.user.id_str) >= 0) {
+                        asyncLoadAndSend(node.loadImages, tweet, (tweet) => { node.send({payload: tweet}); });
+                        return;
                     }
+                    
+                    // if non requested language, drop tweet
                     if (node.topicLanguage.indexOf(tweet.lang) < 0) {
-                        node.log('skipping language https://twitter.com/statuses/' + tweet.id_str);
+                        node.log('skip: language https://twitter.com/statuses/' + tweet.id_str);
                         return;
                     }
-                    if (node.tweetLimitCount < node.tweetLimit) {
-                        if (node.alwaysVerified === false || tweet.user.verified === false || node.userIDs.indexOf(tweet.user.id_str) < 0) {
-                            node.tweetLimitCount += 1;
-                            setTimeout(() => {
-                                node.tweetLimitCount -= 1;
-                            }, (60000 - ((Math.floor(Math.random() * 10) + 1) * 1000)));
-                        }
-                        asyncLoadAndSend(node.loadImages, tweet, (tweet) => {
-                            node.send({payload: tweet});
-                        });
-                    }
-                    else {
-                        node.log('skipping tweet due to tweet limit https://twitter.com/statuses/' + tweet.id_str);
+                    
+                    // if onlyVerified and user is not a verified user, drop tweet
+                    if (node.onlyVerified === true && tweet.user.verified === false) {
+                        node.log('skip: unverified account https://twitter.com/statuses/' + tweet.id_str);
                         return;
                     }
+                    
+                    // if we reached the tweet limit per minute, drop tweet
+                    if (node.tweetLimit > 0 && (node.tweetCount >= node.tweetLimit)) {
+                        node.log('skip: tweet limit https://twitter.com/statuses/' + tweet.id_str);
+                        return;
+                    }
+                    
+                    // if no RT are allowed and tweet is a retweet, drop tweet
+                    if (node.topicRetweets === false && tweet.retweeted_status) {
+                        node.log('skip: retweet https://twitter.com/statuses/' + tweet.id_str);
+                        return;
+                    }
+                    
+                    node.tweetLimitCount += 1;
+                    setTimeout(() => {
+                        node.tweetLimitCount -= 1;
+                    }, (60000 - ((Math.floor(Math.random() * 10) + 1) * 1000)));
+                    asyncLoadAndSend(node.loadImages, tweet, (tweet) => { node.send({payload: tweet}); });
                 });
                 clearInterval(startInterval);
             }
