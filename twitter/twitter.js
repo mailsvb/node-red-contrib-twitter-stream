@@ -163,17 +163,17 @@ module.exports = function(RED) {
 };
 
 const asyncLoadAndSend = (getImages, tweet, cb) => {
-    if (getImages === true && tweet.entities && tweet.entities.media) {
+    if (getImages === true && tweet.extended_tweet && tweet.extended_tweet.entities && tweet.extended_tweet.entities.media && tweet.extended_tweet.entities.media.length > 0) {
         let run = 0;
-        for (var i=0; i < tweet.entities.media.length; i++) {
+        for (var i=0; i < tweet.extended_tweet.entities.media.length; i++) {
             (function(tweet, i) {
-                http.get(tweet.entities.media[i].media_url, (res) => {
+                http.get(tweet.extended_tweet.entities.media[i].media_url, (res) => {
                     let data = [];
                     res.on('data', (chunk) => data.push(chunk));
                     res.on('end', () => { 
                         run++;
-                        tweet.entities.media[i].buffer = Buffer.concat(data);
-                        if (run == tweet.entities.media.length) {
+                        tweet.extended_tweet.entities.media[i].buffer = Buffer.concat(data);
+                        if (run == tweet.extended_tweet.entities.media.length) {
                             cb(tweet);
                         }
                     });
