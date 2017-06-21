@@ -19,14 +19,14 @@ module.exports = function(RED) {
         var id = node.consumerKey;
 
         node.log('create new Twitter instance for: ' + id);
-        
+
         clients[id] = new Twit({
             consumer_key: node.consumerKey,
             consumer_secret: node.consumerSecret,
             access_token: node.accessToken,
             access_token_secret: node.accessSecret
         });
-        
+
         node.client = clients[id];
 
         this.on("close", function() {
@@ -35,7 +35,7 @@ module.exports = function(RED) {
         });
     }
     RED.nodes.registerType("twitter-api-connection",TwitterAPIConnection);
-    
+
     //Twitter stream
     function TwitterStream(n) {
         RED.nodes.createNode(this,n);
@@ -45,6 +45,7 @@ module.exports = function(RED) {
         node.tweetLimit = parseInt(n.tweetLimit) || 0;
         node.onlyVerified = n.onlyVerified || false;
         node.topicRetweets = n.topicRetweets || false;
+        node.allLanguages = n.allLanguages || false;
         node.topicLanguage = n.topicLanguage.toString().trim().split(",") || ['en','de'];
         node.loadImages = n.loadImages || false;
         node.debug = n.debug || false;
@@ -55,11 +56,11 @@ module.exports = function(RED) {
         node.tweetCount = 0;
         node.connection = RED.nodes.getNode(n.connection);
         node.status({fill:"yellow",shape:"dot",text:"connecting"});
-        
+
         if (node.topics !== "") {
             node.streamOptions.track = node.topics;
         }
-        
+
         if (node.follow !== "") {
             node.waitForUserLookup = true;
             node.connection.client.get('users/lookup', {screen_name: node.follow}, function(error, data, response){
@@ -83,7 +84,7 @@ module.exports = function(RED) {
                 node.waitForUserLookup = false;
             });
         }
-        
+
         let startInterval = setInterval(() => {
             if (node.waitForUserLookup === false) {
                 node.stream = node.connection.client.stream('statuses/filter', node.streamOptions);
@@ -91,56 +92,56 @@ module.exports = function(RED) {
                     node.log('streaming API connecting');
                     node.status({fill:"yellow",shape:"dot",text:"connecting"});
                 });
-                
+
                 node.stream.on('connected', function (response) {
                     node.log('streaming API connected ' + util.inspect(node.streamOptions, { showHidden: true, depth: null }));
                     node.status({fill:"green",shape:"dot",text:"connected"});
                 });
-                
+
                 node.stream.on('disconnect', function (disconnectMessage) {
                     node.log('streaming API disconnected ' + util.inspect(disconnectMessage, { showHidden: true, depth: null }));
                     node.status({fill:"red",shape:"dot",text:"disconnected"});
                 });
-                
+
                 node.stream.on('reconnect', function (request, response, connectInterval) {
                     node.log('streaming API reconnecting');
                     node.status({fill:"yellow",shape:"dot",text:"reconnecting"});
                 });
-                    
+
                 node.stream.on('tweet', function(tweet) {
-                    
+
                     (node.debug === true) ? node.log(util.inspect(tweet, { showHidden: true, depth: null })) : node.log(tweet.user.name + ': ' + tweet.text);
-                    
+
                     // if followed user, immediatelly send tweet
                     if (node.userIDs.indexOf(tweet.user.id_str) >= 0) {
                         asyncLoadAndSend(node.loadImages, tweet, (tweet) => { node.send({payload: tweet}); });
                         return;
                     }
-                    
+
                     // if non requested language, drop tweet
-                    if (node.topicLanguage.indexOf(tweet.lang) < 0) {
+                    if (!node.allLanguages && node.topicLanguage.indexOf(tweet.lang) < 0) {
                         node.log('skip: language https://twitter.com/statuses/' + tweet.id_str);
                         return;
                     }
-                    
+
                     // if onlyVerified and user is not a verified user, drop tweet
                     if (node.onlyVerified === true && tweet.user.verified === false) {
                         node.log('skip: unverified account https://twitter.com/statuses/' + tweet.id_str);
                         return;
                     }
-                    
+
                     // if we reached the tweet limit per minute, drop tweet
                     if (node.tweetLimit > 0 && (node.tweetCount >= node.tweetLimit)) {
                         node.log('skip: tweet limit https://twitter.com/statuses/' + tweet.id_str);
                         return;
                     }
-                    
+
                     // if no RT are allowed and tweet is a retweet, drop tweet
                     if (node.topicRetweets === false && tweet.retweeted_status) {
                         node.log('skip: retweet https://twitter.com/statuses/' + tweet.id_str);
                         return;
                     }
-                    
+
                     node.tweetLimitCount += 1;
                     setTimeout(() => {
                         node.tweetLimitCount -= 1;
@@ -170,7 +171,7 @@ const asyncLoadAndSend = (getImages, tweet, cb) => {
                 http.get(tweet.extended_tweet.entities.media[i].media_url, (res) => {
                     let data = [];
                     res.on('data', (chunk) => data.push(chunk));
-                    res.on('end', () => { 
+                    res.on('end', () => {
                         run++;
                         tweet.extended_tweet.entities.media[i].buffer = Buffer.concat(data);
                         if (run == tweet.extended_tweet.entities.media.length) {
