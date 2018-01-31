@@ -1,9 +1,9 @@
 {
-	"name": "node-red-contrib-twitter-stream",
+	"name": "@chuank/node-red-contrib-twitter-stream",
 	"version": "1.4.1",
 	"repository": {
 		"type": "git",
-		"url": "git+ssh://git@github.com/chuank/node-red-contrib-twitter-stream.git"
+		"url": "git+https://git@github.com/chuank/node-red-contrib-twitter-stream.git"
 	},
 	"homepage": "https://github.com/chuank/node-red-contrib-twitter-stream#readme",
 	"description": "node-red twitter streaming API node",
