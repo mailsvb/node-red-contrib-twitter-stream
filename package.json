@@ -1,5 +1,5 @@
 {
-	"name": "@chuank/node-red-contrib-twitter-stream",
+	"name": "node-red-contrib-twitter-stream",
 	"version": "1.4.2",
 	"repository": {
 		"type": "git",
@@ -20,7 +20,7 @@
 		"node-red",
 		"twitter",
 		"stream",
-		"hashtags",
+		"hashtag",
 		"tweet"
 	],
 	"author": {
