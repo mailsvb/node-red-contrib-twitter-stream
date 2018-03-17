@@ -89,6 +89,12 @@ module.exports = function(RED) {
 
         var startInterval = setInterval(() => {
             if (node.waitForUserLookup === false) {
+								// sanity check in case twitter-api-connection credentials have not been properly set
+								if (!node.connection.client) {
+									node.status({fill:"red",shape:"dot",text:"invalid credentials"});
+									return;
+								}
+
                 if (node.streamOptions.follow || node.streamOptions.track) {
                     node.stream = node.connection.client.stream('statuses/filter', node.streamOptions);
                     node.stream.on('connect', function (request) {
