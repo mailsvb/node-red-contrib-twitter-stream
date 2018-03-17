@@ -153,7 +153,7 @@ module.exports = function(RED) {
 
 		                        // if no RT are allowed and tweet is a retweet, drop tweet
 		                        if (node.topicRetweets === false && tweet.retweeted_status) {
-		                            node.log('skip: retweet https://twitter.com/statuses/' + tweet.id_str);
+		                            if(node.debug>0) node.log('skip: retweet https://twitter.com/statuses/' + tweet.id_str);
 		                            return;
 		                        }
 
