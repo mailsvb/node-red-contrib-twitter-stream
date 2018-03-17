@@ -54,122 +54,123 @@ module.exports = function(RED) {
         node.streamOptions = {};
         node.tweetCount = 0;
         node.connection = RED.nodes.getNode(n.connection);
-        node.status({fill:"yellow",shape:"dot",text:"connecting"});
 
-        if (node.topics !== "") {
-            node.streamOptions.track = node.topics;
-        }
 
-        if (node.follow !== "") {
-            node.waitForUserLookup = true;
-            node.connection.client.get('users/lookup', {screen_name: node.follow}, function(error, data, response){
-                if (error) {
-                    node.status({fill:"yellow",shape:"dot",text:"error user/lookup"});
-                    node.error(util.inspect(error, { showHidden: true, depth: null }));
-                }
-                try {
-                    for (var i=0; i < data.length; i++)
-                    {
-                        node.userIDs.push(data[i].id_str.toString());
-                        node.userNames.push(data[i].name.toString());
-                    }
-                    node.streamOptions.follow = node.userIDs.join(',').toString();
+				// sanity check in case twitter-api-connection credentials have not been properly set
+				if (!node.connection) {
+						node.status({fill:"red",shape:"dot",text:"invalid credentials"});
+				} else {
+		        node.status({fill:"yellow",shape:"dot",text:"connecting"});
 
-										if(node.debug>0) {
-											node.log('streaming IDs: ' + node.streamOptions.follow);
-                    	node.log('streaming Names: ' + node.userNames.join(',').toString());
-										}
-                }
-                catch (error) {
-                    node.error(util.inspect(error, { showHidden: true, depth: null }));
-                }
-                node.waitForUserLookup = false;
-            });
-        }
+		        if (node.topics !== "") {
+		            node.streamOptions.track = node.topics;
+		        }
 
-        var startInterval = setInterval(() => {
-            if (node.waitForUserLookup === false) {
-								// sanity check in case twitter-api-connection credentials have not been properly set
-								if (!node.connection.client) {
-									node.status({fill:"red",shape:"dot",text:"invalid credentials"});
-									return;
-								}
+		        if (node.follow !== "") {
+		            node.waitForUserLookup = true;
+		            node.connection.client.get('users/lookup', {screen_name: node.follow}, function(error, data, response){
+		                if (error) {
+		                    node.status({fill:"yellow",shape:"dot",text:"error user/lookup"});
+		                    node.error(util.inspect(error, { showHidden: true, depth: null }));
+		                }
+		                try {
+		                    for (var i=0; i < data.length; i++)
+		                    {
+		                        node.userIDs.push(data[i].id_str.toString());
+		                        node.userNames.push(data[i].name.toString());
+		                    }
+		                    node.streamOptions.follow = node.userIDs.join(',').toString();
 
-                if (node.streamOptions.follow || node.streamOptions.track) {
-                    node.stream = node.connection.client.stream('statuses/filter', node.streamOptions);
-                    node.stream.on('connect', function (request) {
-                        if(node.debug>0) node.log('streaming API connecting');
-                        node.status({fill:"yellow",shape:"dot",text:"connecting"});
-                    });
-
-                    node.stream.on('connected', function (response) {
-                        if(node.debug>0) node.log('streaming API connected ' + util.inspect(node.streamOptions, { showHidden: true, depth: null }));
-                        node.status({fill:"green",shape:"dot",text:"connected"});
-                    });
-
-                    node.stream.on('disconnect', function (disconnectMessage) {
-                        if(node.debug>0) node.log('streaming API disconnected ' + util.inspect(disconnectMessage, { showHidden: true, depth: null }));
-                        node.status({fill:"red",shape:"dot",text:"disconnected"});
-                    });
-
-                    node.stream.on('reconnect', function (request, response, connectInterval) {
-                        if(node.debug>0) node.log('streaming API reconnecting');
-                        node.status({fill:"yellow",shape:"dot",text:"reconnecting"});
-                    });
-
-                    node.stream.on('tweet', function(tweet) {
-												switch(node.debug) {
-													case 1:
-														node.log(tweet.user.name + ': ' + tweet.text);
-														break;
-													case 2:
-														node.log(util.inspect(tweet, { showHidden: true, depth: null }))
-														break;
+												if(node.debug>0) {
+													node.log('streaming IDs: ' + node.streamOptions.follow);
+		                    	node.log('streaming Names: ' + node.userNames.join(',').toString());
 												}
+		                }
+		                catch (error) {
+		                    node.error(util.inspect(error, { showHidden: true, depth: null }));
+		                }
+		                node.waitForUserLookup = false;
+		            });
+		        }
 
-                        // if followed user, immediatelly send tweet
-                        if (node.userIDs.indexOf(tweet.user.id_str) >= 0) {
-                            asyncLoadAndSend(node.loadMedia, tweet, (tweet) => { node.send({payload: tweet}); });
-                            return;
-                        }
+		        var startInterval = setInterval(() => {
+		            if (node.waitForUserLookup === false) {
+		                if (node.streamOptions.follow || node.streamOptions.track) {
+		                    node.stream = node.connection.client.stream('statuses/filter', node.streamOptions);
+		                    node.stream.on('connect', function (request) {
+		                        if(node.debug>0) node.log('streaming API connecting');
+		                        node.status({fill:"yellow",shape:"dot",text:"connecting"});
+		                    });
 
-                        // if non requested language, drop tweet
-                        if (node.topicLanguage.indexOf(tweet.lang) < 0) {
-                            if(node.debug>0) node.log('skip: language https://twitter.com/statuses/' + tweet.id_str);
-                            return;
-                        }
+		                    node.stream.on('connected', function (response) {
+		                        if(node.debug>0) node.log('streaming API connected ' + util.inspect(node.streamOptions, { showHidden: true, depth: null }));
+		                        node.status({fill:"green",shape:"dot",text:"connected"});
+		                    });
 
-                        // if onlyVerified and user is not a verified user, drop tweet
-                        if (node.onlyVerified === true && tweet.user.verified === false) {
-                            if(node.debug>0) node.log('skip: unverified account https://twitter.com/statuses/' + tweet.id_str);
-                            return;
-                        }
+		                    node.stream.on('disconnect', function (disconnectMessage) {
+		                        if(node.debug>0) node.log('streaming API disconnected ' + util.inspect(disconnectMessage, { showHidden: true, depth: null }));
+		                        node.status({fill:"red",shape:"dot",text:"disconnected"});
+		                    });
 
-                        // if we reached the tweet limit per minute, drop tweet
-                        if (node.tweetLimit > 0 && (node.tweetCount >= node.tweetLimit)) {
-                            if(node.debug>0) node.log('skip: tweet limit https://twitter.com/statuses/' + tweet.id_str);
-                            return;
-                        }
+		                    node.stream.on('reconnect', function (request, response, connectInterval) {
+		                        if(node.debug>0) node.log('streaming API reconnecting');
+		                        node.status({fill:"yellow",shape:"dot",text:"reconnecting"});
+		                    });
 
-                        // if no RT are allowed and tweet is a retweet, drop tweet
-                        if (node.topicRetweets === false && tweet.retweeted_status) {
-                            node.log('skip: retweet https://twitter.com/statuses/' + tweet.id_str);
-                            return;
-                        }
+		                    node.stream.on('tweet', function(tweet) {
+														switch(node.debug) {
+															case 1:
+																node.log(tweet.user.name + ': ' + tweet.text);
+																break;
+															case 2:
+																node.log(util.inspect(tweet, { showHidden: true, depth: null }))
+																break;
+														}
 
-                        node.tweetLimitCount += 1;
-                        setTimeout(() => {
-                            node.tweetLimitCount -= 1;
-                        }, (60000 - ((Math.floor(Math.random() * 10) + 1) * 1000)));
-                        asyncLoadAndSend(node.loadMedia, tweet, (tweet) => { node.send({payload: tweet}); });
-                    });
-                }
-                else {
-                    node.status({fill:"red",shape:"dot",text:"nothing to stream"});
-                }
-                clearInterval(startInterval);
-            }
-        }, 100);
+		                        // if followed user, immediatelly send tweet
+		                        if (node.userIDs.indexOf(tweet.user.id_str) >= 0) {
+		                            asyncLoadAndSend(node.loadMedia, tweet, (tweet) => { node.send({payload: tweet}); });
+		                            return;
+		                        }
+
+		                        // if non requested language, drop tweet
+		                        if (node.topicLanguage.indexOf(tweet.lang) < 0) {
+		                            if(node.debug>0) node.log('skip: language https://twitter.com/statuses/' + tweet.id_str);
+		                            return;
+		                        }
+
+		                        // if onlyVerified and user is not a verified user, drop tweet
+		                        if (node.onlyVerified === true && tweet.user.verified === false) {
+		                            if(node.debug>0) node.log('skip: unverified account https://twitter.com/statuses/' + tweet.id_str);
+		                            return;
+		                        }
+
+		                        // if we reached the tweet limit per minute, drop tweet
+		                        if (node.tweetLimit > 0 && (node.tweetCount >= node.tweetLimit)) {
+		                            if(node.debug>0) node.log('skip: tweet limit https://twitter.com/statuses/' + tweet.id_str);
+		                            return;
+		                        }
+
+		                        // if no RT are allowed and tweet is a retweet, drop tweet
+		                        if (node.topicRetweets === false && tweet.retweeted_status) {
+		                            node.log('skip: retweet https://twitter.com/statuses/' + tweet.id_str);
+		                            return;
+		                        }
+
+		                        node.tweetLimitCount += 1;
+		                        setTimeout(() => {
+		                            node.tweetLimitCount -= 1;
+		                        }, (60000 - ((Math.floor(Math.random() * 10) + 1) * 1000)));
+		                        asyncLoadAndSend(node.loadMedia, tweet, (tweet) => { node.send({payload: tweet}); });
+		                    });
+		                }
+		                else {
+		                    node.status({fill:"red",shape:"dot",text:"nothing to stream"});
+		                }
+		                clearInterval(startInterval);
+		            }
+		        }, 100);
+				}
 
         this.on("close", function() {
             if (node.stream) {
