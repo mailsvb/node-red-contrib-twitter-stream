@@ -1,23 +1,33 @@
 {
-	"author": {
-		"name": "Sven, mailsvb@gmail.com"
-	},
-	"description": "node-red twitter streaming API node",
 	"name": "node-red-contrib-twitter-stream",
-	"keywords": [ "node-red", "twitter", "stream", "hashtags", "tweet" ],
+	"version": "1.4.2",
+	"repository": {
+		"type": "git",
+		"url": "git+https://git@github.com/chuank/node-red-contrib-twitter-stream.git"
+	},
+	"homepage": "https://github.com/chuank/node-red-contrib-twitter-stream#readme",
+	"description": "node-red twitter streaming API node",
+	"main": "twitter.js",
+	"dependencies": {
+		"twit": "*"
+	},
 	"node-red": {
 		"nodes": {
 			"twitter-stream": "twitter/twitter.js"
 		}
 	},
-	"license": "MIT",
-	"dependencies": {
-		"twit": "*"
+	"keywords": [
+		"node-red",
+		"twitter",
+		"stream",
+		"hashtag",
+		"tweet"
+	],
+	"author": {
+		"name": "Sven <mailsvb@gmail.com>"
 	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/mailsvb/node-red-contrib-twitter-stream.git"
+	"contributors": {
+		"name": "Chuan Khoo <khoo.chuan@gmail.com>"
 	},
-	"homepage": "https://github.com/mailsvb/node-red-contrib-twitter-stream#readme",
-	"version": "1.4.0"
+	"license": "MIT"
 }

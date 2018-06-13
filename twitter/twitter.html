@@ -34,7 +34,7 @@
     });
 </script>
 
-<!-- Twitter streaming API --> 
+<!-- Twitter streaming API -->
 
 <script type="text/x-red" data-template-name="Twitter Stream">
     <div class="form-row">
@@ -82,10 +82,13 @@
         <input type="checkbox" id="node-input-loadMedia" style="width:auto; vertical-align:top;">
         <label for="node-input-loadMedia" style="width:auto;"> Load and include media in tweets</label>
     </div>
-    <div class="form-row">
-        <label style="width:25%">Debug?</label>
-        <input type="checkbox" id="node-input-debug" style="width:auto; vertical-align:top;">
-        <label for="node-input-debug" style="width:auto;"> Enable debug logging</label>
+		<div class="form-row">
+        <label for="node-input-debug" style="width:25%">Debug?</label>
+        <select type="text" id="node-input-debug" style="width:25%">
+            <option value="2">Verbose</option>
+            <option value="1">Debug</option>
+            <option value="0">None</option>
+        </select>
     </div>
     <div class="form-row">
         <label for="node-input-name" style="width:25%"><i class="icon-bookmark"></i> Node name</label>
@@ -120,7 +123,7 @@
             topicRetweets: {value:false},
             loadMedia: {value:false},
             topicLanguage: {value:"en,de"},
-            debug: {value:false},
+            debug: {value:"0"},
             name: {value:"",required:false},
         },
         color: "#4099fe",
