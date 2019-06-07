@@ -1,4 +1,6 @@
 const http = require('http');
+const HttpsProxyAgent = require('https-proxy-agent');
+const url = require('url');
 
 module.exports = function(RED) {
     "use strict";
@@ -184,7 +186,15 @@ const asyncLoadAndSend = (getMedia, tweet, cb) => {
                         }
                     }
                 }
-                http.get(tweet.extended_tweet.entities.media[i].download_url, (res) => {
+                let options = {
+                    agent: null
+                }
+                if (process.env.http_proxy)
+                {
+                    options.agent = new HttpsProxyAgent(url.parse(process.env.http_proxy));
+                    node.log(`Using proxy ${process.env.http_proxy}`);
+                }
+                http.get(tweet.extended_tweet.entities.media[i].download_url, options, (res) => {
                     let data = [];
                     res.on('data', (chunk) => data.push(chunk));
                     res.on('end', () => { 

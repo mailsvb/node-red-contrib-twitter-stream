@@ -1,23 +1,24 @@
 {
-	"author": {
-		"name": "Sven, mailsvb@gmail.com"
-	},
-	"description": "node-red twitter streaming API node",
-	"name": "node-red-contrib-twitter-stream",
-	"keywords": [ "node-red", "twitter", "stream", "hashtags", "tweet" ],
-	"node-red": {
-		"nodes": {
-			"twitter-stream": "twitter/twitter.js"
-		}
-	},
-	"license": "MIT",
-	"dependencies": {
-		"twit": "*"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/mailsvb/node-red-contrib-twitter-stream.git"
-	},
-	"homepage": "https://github.com/mailsvb/node-red-contrib-twitter-stream#readme",
-	"version": "1.4.0"
+    "author": {
+        "name": "Sven, mailsvb@gmail.com"
+    },
+    "description": "node-red twitter streaming API node",
+    "name": "node-red-contrib-twitter-stream",
+    "keywords": [ "node-red", "twitter", "stream", "hashtags", "tweet" ],
+    "node-red": {
+        "nodes": {
+            "twitter-stream": "twitter/twitter.js"
+        }
+    },
+    "license": "MIT",
+    "dependencies": {
+        "twit": "*",
+        "https-proxy-agent": "*"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/mailsvb/node-red-contrib-twitter-stream.git"
+    },
+    "homepage": "https://github.com/mailsvb/node-red-contrib-twitter-stream#readme",
+    "version": "1.5.0"
 }
