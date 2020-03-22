@@ -1,24 +1,40 @@
 {
-    "author": {
-        "name": "Sven, mailsvb@gmail.com"
-    },
-    "description": "node-red twitter streaming API node",
-    "name": "node-red-contrib-twitter-stream",
-    "keywords": [ "node-red", "twitter", "stream", "hashtags", "tweet" ],
+  "name": "node-red-contrib-twitter-stream",
+  "version": "1.5.0",
+  "description": "Node-red node for querying the Twitter streaming API",
     "node-red": {
-        "nodes": {
-            "twitter-stream": "twitter/twitter.js"
-        }
-    },
-    "license": "MIT",
-    "dependencies": {
-        "twit": "*",
-        "https-proxy-agent": "*"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/mailsvb/node-red-contrib-twitter-stream.git"
-    },
-    "homepage": "https://github.com/mailsvb/node-red-contrib-twitter-stream#readme",
-    "version": "1.5.0"
+    "nodes": {
+      "twitter-stream": "twitter/twitter.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mailsvb/node-red-contrib-twitter-stream.git"
+  },
+  "keywords": [
+  	"node-red",
+  	"twitter",
+  	"stream",
+    "hashtags",
+  	"tweet",
+  	"geo",
+  	"location"
+  ],
+  "dependencies": {
+    "twit": "*",
+    "https-proxy-agent": "*"
+  },
+  "author": {
+    "name": "Sven",
+    "email": "mailsvb@gmail.com",
+    "url": "https://github.com/mailsvb"
+  },
+  "contributors": [
+    {"name":"Oliver Dawkins","url":"https://github.com/virtualarchitectures"}
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mailsvb/node-red-contrib-twitter-stream.git/issues"
+  },
+  "homepage": "https://github.com/mailsvb/node-red-contrib-twitter-stream#readme"
 }

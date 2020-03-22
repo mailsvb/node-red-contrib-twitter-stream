@@ -1,14 +1,25 @@
 # node-red-contrib-twitter-stream
-node-red node for accessing the Twitter streaming API (based on https://github.com/desmondmorris/node-twitter/)
+Node-red node for querying the Twitter streaming API.
 
-## Installation
-npm -g install node-red-contrib-twitter-stream
+Further information on the parameters for filtering real-time tweets can be found in the documentation:
+- [Standard streaming API request parameters](https://developer.twitter.com/en/docs/tweets/filter-realtime/guides/basic-stream-parameters)
+- [Filtering Tweets by location](https://developer.twitter.com/en/docs/tutorials/filtering-tweets-by-location)
+
+Be aware of the [Geo Guidelines](https://developer.twitter.com/en/developer-terms/geo-guidelines) provided by Twitter for developers.
 
 ## Features
-- connect to the Twitter streaming API and get tweets of specific users (follow)
-- connect to the Twitter streaming API and get tweets of specific topics (track)
+Connect to the Twitter streaming API and...
+- Get tweets of specific users (follow)
+- Get tweets of specific topics (track)
+- Get tweets for a specific region described by a geographic bounding box (locations)
  
 ## Configuration
 - Get a Twitter dev account from https://dev.twitter.com
 - Create a Twitter App on https://apps.twitter.com
 - Choose Twitter users / hashtags or random search strings
+- Alternatively provide latitude and longitude coordinates describing the North, West, East and South extents of a geographic bounding box.
+
+![Node-Red Twitter Stream](images/node-red-contrib-twitter-stream.PNG)
+
+## Further Development 
+If you are interested in suggesting enhancements please raise an issue for review via [GitHub](https://github.com/virtualarchitectures/node-red-contrib-twitter-stream-location). 
