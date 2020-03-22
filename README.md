@@ -12,14 +12,14 @@ Connect to the Twitter streaming API and...
 - Get tweets of specific users (follow)
 - Get tweets of specific topics (track)
 - Get tweets for a specific region described by a geographic bounding box (locations)
- 
+
+![Node-Red Twitter Stream](images/node-red-contrib-twitter-stream.PNG)
+
 ## Configuration
 - Get a Twitter dev account from https://dev.twitter.com
 - Create a Twitter App on https://apps.twitter.com
 - Choose Twitter users / hashtags or random search strings
 - Alternatively provide latitude and longitude coordinates describing the North, West, East and South extents of a geographic bounding box.
 
-![Node-Red Twitter Stream](images/node-red-contrib-twitter-stream.PNG)
 
-## Further Development 
-If you are interested in suggesting enhancements please raise an issue for review via [GitHub](https://github.com/virtualarchitectures/node-red-contrib-twitter-stream-location). 
+
