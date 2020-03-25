@@ -37,13 +37,19 @@ module.exports = function(RED) {
         });
     }
     RED.nodes.registerType("twitter-api-connection",TwitterAPIConnection);
-    
+
     //Twitter stream
     function TwitterStream(n) {
         RED.nodes.createNode(this,n);
         var node = this;
         node.follow = n.follow || "";
         node.topics = n.topics || "";
+        node.xmin = n.xmin || "";
+        node.xmax = n.xmax || "";
+        node.ymin = n.ymin || "";
+        node.ymax = n.ymax || "";
+        node.onlyPoints = n.onlyPoints || false;
+        node.onlyBounded = n.onlyBounded || false;
         node.tweetLimit = parseInt(n.tweetLimit) || 0;
         node.onlyVerified = n.onlyVerified || false;
         node.topicRetweets = n.topicRetweets || false;
@@ -53,6 +59,7 @@ module.exports = function(RED) {
         node.waitForUserLookup = false;
         node.userNames = [];
         node.userIDs = [];
+        node.locations = [];
         node.streamOptions = {};
         node.tweetCount = 0;
         node.connection = RED.nodes.getNode(n.connection);
@@ -85,10 +92,15 @@ module.exports = function(RED) {
                 node.waitForUserLookup = false;
             });
         }
+
+        if (node.xmin !== "" && node.ymin !== "" && node.xmax !== "" && node.ymax !== "") {
+        	node.locations = [node.xmin, node.ymin, node.xmax, node.ymax];
+        	node.streamOptions.locations = node.locations;
+        }
         
         var startInterval = setInterval(() => {
             if (node.waitForUserLookup === false) {
-                if (node.streamOptions.follow || node.streamOptions.track) {
+                if (node.streamOptions.follow || node.streamOptions.track || node.streamOptions.locations) {
                     node.stream = node.connection.client.stream('statuses/filter', node.streamOptions);
                     node.stream.on('connect', function (request) {
                         node.log('streaming API connecting');
@@ -123,6 +135,24 @@ module.exports = function(RED) {
                         // if non requested language, drop tweet
                         if (node.topicLanguage.indexOf(tweet.lang) < 0) {
                             node.log('skip: language https://twitter.com/statuses/' + tweet.id_str);
+                            return;
+                        }
+
+                        // if no point coordinate, drop tweet
+                        if (node.locations !== null && node.onlyPoints === true && tweet.geo === null) {
+                            node.log('skip: no coordinate https://twitter.com/statuses/' + tweet.id_str);
+                            return;
+                        }
+
+                        // if coordinate falls outside boundary, frop tweet (lat, lon)
+                        if (node.locations !== null && node.onlyBounded === true && 
+                        	(
+                        		(tweet.geo.coordinates[0] < node.ymin || tweet.geo.coordinates[0] > node.ymax) ||
+                        		(tweet.geo.coordinates[1] < node.xmin || tweet.geo.coordinates[1] > node.xmax)
+                        		)
+                        	)
+                        {
+                        	node.log('skip: outside boundary https://twitter.com/statuses/' + tweet.id_str);
                             return;
                         }
                         
@@ -211,4 +241,4 @@ const asyncLoadAndSend = (getMedia, tweet, cb) => {
     else {
         cb(tweet);
     }
-};
+}
