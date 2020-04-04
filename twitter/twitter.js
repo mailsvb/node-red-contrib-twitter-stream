@@ -65,41 +65,41 @@ module.exports = function(RED) {
         node.connection = RED.nodes.getNode(n.connection);
         node.status({fill:"yellow",shape:"dot",text:"connecting"});
         
-        if (node.topics !== "") {
-            node.streamOptions.track = node.topics;
-        }
-        
-        if (node.follow !== "") {
-            node.waitForUserLookup = true;
-            node.connection.client.get('users/lookup', {screen_name: node.follow}, function(error, data, response){
-                if (error) {
-                    node.status({fill:"yellow",shape:"dot",text:"error user/lookup"});
-                    node.error(util.inspect(error, { showHidden: true, depth: null }));
-                }
-                try {
-                    for (var i=0; i < data.length; i++)
-                    {
-                        node.userIDs.push(data[i].id_str.toString());
-                        node.userNames.push(data[i].name.toString());
-                    }
-                    node.streamOptions.follow = node.userIDs.join(',').toString();
-                    node.log('streaming IDs: ' + node.streamOptions.follow);
-                    node.log('streaming Names: ' + node.userNames.join(',').toString());
-                }
-                catch (error) {
-                    node.error(util.inspect(error, { showHidden: true, depth: null }));
-                }
-                node.waitForUserLookup = false;
-            });
-        }
-
-        if (node.xmin !== "" && node.ymin !== "" && node.xmax !== "" && node.ymax !== "") {
-        	node.locations = [node.xmin, node.ymin, node.xmax, node.ymax];
-        	node.streamOptions.locations = node.locations;
-        }
-        
         if (node.connection !== null)
         {
+	        if (node.topics !== "") {
+	            node.streamOptions.track = node.topics;
+	        }
+	        
+	        if (node.follow !== "") {
+	            node.waitForUserLookup = true;
+	            node.connection.client.get('users/lookup', {screen_name: node.follow}, function(error, data, response){
+	                if (error) {
+	                    node.status({fill:"yellow",shape:"dot",text:"error user/lookup"});
+	                    node.error(util.inspect(error, { showHidden: true, depth: null }));
+	                }
+	                try {
+	                    for (var i=0; i < data.length; i++)
+	                    {
+	                        node.userIDs.push(data[i].id_str.toString());
+	                        node.userNames.push(data[i].name.toString());
+	                    }
+	                    node.streamOptions.follow = node.userIDs.join(',').toString();
+	                    node.log('streaming IDs: ' + node.streamOptions.follow);
+	                    node.log('streaming Names: ' + node.userNames.join(',').toString());
+	                }
+	                catch (error) {
+	                    node.error(util.inspect(error, { showHidden: true, depth: null }));
+	                }
+	                node.waitForUserLookup = false;
+	            });
+	        }
+
+	        if (node.xmin !== "" && node.ymin !== "" && node.xmax !== "" && node.ymax !== "") {
+	        	node.locations = [node.xmin, node.ymin, node.xmax, node.ymax];
+	        	node.streamOptions.locations = node.locations;
+	        }
+        
 	        var startInterval = setInterval(() => {
 	            if (node.waitForUserLookup === false) {
 	                if (node.streamOptions.follow || node.streamOptions.track || node.streamOptions.locations) {
