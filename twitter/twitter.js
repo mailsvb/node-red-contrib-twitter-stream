@@ -58,6 +58,7 @@ module.exports = function(RED) {
         node.loadMedia = n.loadMedia || false;
         node.debug = n.debug || false;
         node.waitForUserLookup = false;
+        node.waitForValidCoords = false;
         node.userNames = [];
         node.userIDs = [];
         node.locations = [];
@@ -96,101 +97,110 @@ module.exports = function(RED) {
 	            });
 	        }
 
-	        if (node.xmin !== "" && node.ymin !== "" && node.xmax !== "" && node.ymax !== "") {
-	        	if (between(node.xmin, -180, 180) && between(node.ymin, -90, 90) && between(node.xmax, -180, 180) && between(node.ymax, -90, 90)) {
-	        		if (node.xmin < node.xmax && node.ymin < node.ymax) {
-	        			node.locations = [node.xmin, node.ymin, node.xmax, node.ymax];
-		        		node.streamOptions.locations = node.locations;
-		        	}
+	        if (node.xmin !== "" || node.ymin !== "" || node.xmax !== "" || node.ymax !== "") {
+	        	node.waitForValidCoords = true;
+	        	if (node.xmin !== "" && node.ymin !== "" && node.xmax !== "" && node.ymax !== "") {
+		        	if (between(node.xmin, -180, 180) && between(node.ymin, -90, 90) && between(node.xmax, -180, 180) && between(node.ymax, -90, 90)) {
+		        		if (parseFloat(node.xmin) < parseFloat(node.xmax) && parseFloat(node.ymin) < parseFloat(node.ymax)) {
+		        			node.locations = [node.xmin, node.ymin, node.xmax, node.ymax];
+			        		node.streamOptions.locations = node.locations;
+			        		node.waitForValidCoords = false;
+			        	}
+			        }
 		        }
 		    }
         
 	        var startInterval = setInterval(() => {
 	            if (node.waitForUserLookup === false) {
-	                if (node.streamOptions.follow || node.streamOptions.track || node.streamOptions.locations) {
-	                    node.stream = node.connection.client.stream('statuses/filter', node.streamOptions);
-	                    node.stream.on('connect', function (request) {
-	                        node.log('streaming API connecting');
-	                        node.status({fill:"yellow",shape:"dot",text:"connecting"});
-	                    });
-	                    
-	                    node.stream.on('connected', function (response) {
-	                        node.log('streaming API connected ' + util.inspect(node.streamOptions, { showHidden: true, depth: null }));
-	                        node.status({fill:"green",shape:"dot",text:"connected"});
-	                    });
-	                    
-	                    node.stream.on('disconnect', function (disconnectMessage) {
-	                        node.log('streaming API disconnected ' + util.inspect(disconnectMessage, { showHidden: true, depth: null }));
-	                        node.status({fill:"red",shape:"dot",text:"disconnected"});
-	                    });
-	                    
-	                    node.stream.on('reconnect', function (request, response, connectInterval) {
-	                        node.log('streaming API reconnecting');
-	                        node.status({fill:"yellow",shape:"dot",text:"reconnecting"});
-	                    });
-	                        
-	                    node.stream.on('tweet', function(tweet) {
-	                        
-	                        (node.debug === true) ? node.log(util.inspect(tweet, { showHidden: true, depth: null })) : node.log(tweet.user.name + ': ' + tweet.text);
-	                        
-	                        // if followed user, immediately send tweet
-	                        if (node.userIDs.indexOf(tweet.user.id_str) >= 0) {
-	                            asyncLoadAndSend(node.loadMedia, tweet, (tweet) => { node.send({payload: tweet}); });
-	                            return;
-	                        }
-	                        
-	                        // if non requested language, drop tweet
-	                        if (node.topicLanguage.indexOf(tweet.lang) < 0) {
-	                            node.log('skip: language https://twitter.com/statuses/' + tweet.id_str);
-	                            return;
-	                        }
+	            	if (node.waitForValidCoords === false) {
+		                if (node.streamOptions.follow || node.streamOptions.track || node.streamOptions.locations) {
+		                    node.stream = node.connection.client.stream('statuses/filter', node.streamOptions);
+		                    node.stream.on('connect', function (request) {
+		                        node.log('streaming API connecting');
+		                        node.status({fill:"yellow",shape:"dot",text:"connecting"});
+		                    });
+		                    
+		                    node.stream.on('connected', function (response) {
+		                        node.log('streaming API connected ' + util.inspect(node.streamOptions, { showHidden: true, depth: null }));
+		                        node.status({fill:"green",shape:"dot",text:"connected"});
+		                    });
+		                    
+		                    node.stream.on('disconnect', function (disconnectMessage) {
+		                        node.log('streaming API disconnected ' + util.inspect(disconnectMessage, { showHidden: true, depth: null }));
+		                        node.status({fill:"red",shape:"dot",text:"disconnected"});
+		                    });
+		                    
+		                    node.stream.on('reconnect', function (request, response, connectInterval) {
+		                        node.log('streaming API reconnecting');
+		                        node.status({fill:"yellow",shape:"dot",text:"reconnecting"});
+		                    });
+		                        
+		                    node.stream.on('tweet', function(tweet) {
+		                        
+		                        (node.debug === true) ? node.log(util.inspect(tweet, { showHidden: true, depth: null })) : node.log(tweet.user.name + ': ' + tweet.text);
+		                        
+		                        // if followed user, immediately send tweet
+		                        if (node.userIDs.indexOf(tweet.user.id_str) >= 0) {
+		                            asyncLoadAndSend(node.loadMedia, tweet, (tweet) => { node.send({payload: tweet}); });
+		                            return;
+		                        }
+		                        
+		                        // if non requested language, drop tweet
+		                        if (node.topicLanguage.indexOf(tweet.lang) < 0) {
+		                            node.log('skip: language https://twitter.com/statuses/' + tweet.id_str);
+		                            return;
+		                        }
 
-	                        // if no point coordinate, drop tweet
-	                        if (node.locations !== null && node.onlyPoints === true && tweet.geo === null) {
-	                            node.log('skip: no coordinate https://twitter.com/statuses/' + tweet.id_str);
-	                            return;
-	                        }
+		                        // if no point coordinate, drop tweet
+		                        if (node.locations !== null && node.onlyPoints === true && tweet.geo === null) {
+		                            node.log('skip: no coordinate https://twitter.com/statuses/' + tweet.id_str);
+		                            return;
+		                        }
 
-	                        // if coordinate falls outside boundary, drop tweet (lat, lon)
-	                        if (node.locations !== null && node.onlyBounded === true && 
-	                        	(
-	                        		(tweet.geo.coordinates[0] < node.ymin || tweet.geo.coordinates[0] > node.ymax) ||
-	                        		(tweet.geo.coordinates[1] < node.xmin || tweet.geo.coordinates[1] > node.xmax)
-	                        		)
-	                        	)
-	                        {
-	                        	node.log('skip: outside boundary https://twitter.com/statuses/' + tweet.id_str);
-	                            return;
-	                        }
-	                        
-	                        // if onlyVerified and user is not a verified user, drop tweet
-	                        if (node.onlyVerified === true && tweet.user.verified === false) {
-	                            node.log('skip: unverified account https://twitter.com/statuses/' + tweet.id_str);
-	                            return;
-	                        }
-	                        
-	                        // if we reached the tweet limit per minute, drop tweet
-	                        if (node.tweetLimit > 0 && (node.tweetCount >= node.tweetLimit)) {
-	                            node.log('skip: tweet limit https://twitter.com/statuses/' + tweet.id_str);
-	                            return;
-	                        }
-	                        
-	                        // if no RT are allowed and tweet is a retweet, drop tweet
-	                        if (node.topicRetweets === false && tweet.retweeted_status) {
-	                            node.log('skip: retweet https://twitter.com/statuses/' + tweet.id_str);
-	                            return;
-	                        }
-	                        
-	                        node.tweetLimitCount += 1;
-	                        setTimeout(() => {
-	                            node.tweetLimitCount -= 1;
-	                        }, (60000 - ((Math.floor(Math.random() * 10) + 1) * 1000)));
-	                        asyncLoadAndSend(node.loadMedia, tweet, (tweet) => { node.send({payload: tweet}); });
-	                    });
-	                }
-	                else {
-	                    node.status({fill:"red",shape:"dot",text:"nothing to stream"});
-	                }
+		                        // if coordinate falls outside boundary, drop tweet (lat, lon)
+		                        if (node.locations !== null && node.onlyBounded === true && 
+		                        	(
+		                        		(tweet.geo.coordinates[0] < node.ymin || tweet.geo.coordinates[0] > node.ymax) ||
+		                        		(tweet.geo.coordinates[1] < node.xmin || tweet.geo.coordinates[1] > node.xmax)
+		                        		)
+		                        	)
+		                        {
+		                        	node.log('skip: outside boundary https://twitter.com/statuses/' + tweet.id_str);
+		                            return;
+		                        }
+		                        
+		                        // if onlyVerified and user is not a verified user, drop tweet
+		                        if (node.onlyVerified === true && tweet.user.verified === false) {
+		                            node.log('skip: unverified account https://twitter.com/statuses/' + tweet.id_str);
+		                            return;
+		                        }
+		                        
+		                        // if we reached the tweet limit per minute, drop tweet
+		                        if (node.tweetLimit > 0 && (node.tweetCount >= node.tweetLimit)) {
+		                            node.log('skip: tweet limit https://twitter.com/statuses/' + tweet.id_str);
+		                            return;
+		                        }
+		                        
+		                        // if no RT are allowed and tweet is a retweet, drop tweet
+		                        if (node.topicRetweets === false && tweet.retweeted_status) {
+		                            node.log('skip: retweet https://twitter.com/statuses/' + tweet.id_str);
+		                            return;
+		                        }
+		                        
+		                        node.tweetLimitCount += 1;
+		                        setTimeout(() => {
+		                            node.tweetLimitCount -= 1;
+		                        }, (60000 - ((Math.floor(Math.random() * 10) + 1) * 1000)));
+		                        asyncLoadAndSend(node.loadMedia, tweet, (tweet) => { node.send({payload: tweet}); });
+		                    });
+		                }
+		                else {
+		                    node.status({fill:"red",shape:"dot",text:"nothing to stream"});
+		                }
+		            }
+		            else {
+		            	node.status({fill:"red",shape:"dot",text:"invalid coordinates"});
+		            }
 	                clearInterval(startInterval);
 	            }
 	        }, 100);
