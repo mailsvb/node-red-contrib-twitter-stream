@@ -6,6 +6,7 @@ module.exports = function(RED) {
     "use strict";
     const util = require('util');
     const Twit = require('twit');
+    const between = require('between-range');
 
     var clients = {};
 
@@ -66,7 +67,7 @@ module.exports = function(RED) {
         node.status({fill:"yellow",shape:"dot",text:"connecting"});
         
         if (node.connection !== null)
-        {
+        {	        
 	        if (node.topics !== "") {
 	            node.streamOptions.track = node.topics;
 	        }
@@ -96,9 +97,13 @@ module.exports = function(RED) {
 	        }
 
 	        if (node.xmin !== "" && node.ymin !== "" && node.xmax !== "" && node.ymax !== "") {
-	        	node.locations = [node.xmin, node.ymin, node.xmax, node.ymax];
-	        	node.streamOptions.locations = node.locations;
-	        }
+	        	if (between(node.xmin, -180, 180) && between(node.ymin, -90, 90) && between(node.xmax, -180, 180) && between(node.ymax, -90, 90)) {
+	        		if (node.xmin < node.xmax && node.ymin < node.ymax) {
+	        			node.locations = [node.xmin, node.ymin, node.xmax, node.ymax];
+		        		node.streamOptions.locations = node.locations;
+		        	}
+		        }
+		    }
         
 	        var startInterval = setInterval(() => {
 	            if (node.waitForUserLookup === false) {
@@ -146,7 +151,7 @@ module.exports = function(RED) {
 	                            return;
 	                        }
 
-	                        // if coordinate falls outside boundary, frop tweet (lat, lon)
+	                        // if coordinate falls outside boundary, drop tweet (lat, lon)
 	                        if (node.locations !== null && node.onlyBounded === true && 
 	                        	(
 	                        		(tweet.geo.coordinates[0] < node.ymin || tweet.geo.coordinates[0] > node.ymax) ||
