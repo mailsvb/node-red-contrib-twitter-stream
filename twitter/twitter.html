@@ -56,25 +56,30 @@
     <div class="form-row form-tips">
         <span>Comma seperated list of languages to filter for. Get full list at <a href="https://dev.twitter.com/rest/reference/get/help/languages" target="_blank">https://dev.twitter.com/rest/reference/get/help/languages</a></span>
     </div>
-
     <div class="form-row">
     <td width="100px"><i class="fa fa-globe"></i> Geographic Coordinates<td>
     </div>
     <div class="form-row">
-        <label for="node-input-ymax" style="width:25%"> North</label>
-        <input type="text" id="node-input-ymax">
-    </div>
-    <div class="form-row">
-        <label for="node-input-xmin" style="width:25%"> West</label>
-        <input type="text" id="node-input-xmin">
-    </div>
-    <div class="form-row">
-        <label for="node-input-xmax" style="width:25%"> East</label>
-        <input type="text" id="node-input-xmax">
-    </div>
-    <div class="form-row">
-        <label for="node-input-ymin" style="width:25%"> South</label>
-        <input type="text" id="node-input-ymin">
+    <table>
+        <tr>
+            <td><label for="" style="width:50px"></td>
+            <td><label for="node-input-ymax" style="width:120px; text-align:right"> North</label></td>
+            <td><input type="text" id="node-input-ymax" style="width:120px"></td>
+            <td><label for="" style="width:120px"></td>                       
+        </tr>
+        <tr>
+            <td><label for="node-input-xmin" style="width:50px; text-align:right"> West</label></td>
+            <td><input type="text" id="node-input-xmin" style="width:120px"></td>
+            <td><label for="node-input-xmax" style="width:120px; text-align:right"> East</label></td>
+            <td><input type="text" id="node-input-xmax" style="width:120px"></td>                    
+        </tr>
+        <tr>
+            <td><label for="" style="width:50px"></td>
+            <td><label for="node-input-ymin" style="width:120px; text-align:right"> South</label></td>
+            <td><input type="text" id="node-input-ymin" style="width:120px"></td>
+            <td><label for="" style="width:120px"></td>                       
+        </tr>
+    </table>
     </div>
     <div class="form-row">
     <td width="100px"><i class="fa fa-filter"></i> Spatial Filters<td>
@@ -92,7 +97,6 @@
         <div class="form-row form-tips">
         <span>Results can include Tweets with “Point” coordinates or with a Twitter "Place": <a href="https://developer.twitter.com/en/docs/tutorials/filtering-tweets-by-location" target="_blank">https://developer.twitter.com/en/docs/tutorials/filtering-tweets-by-location</a></span>
     </div>
-
     <div class="form-row">
     <td width="100px"><i class="fa fa-filter"></i> Streaming API Response Filters<td>
     </div>

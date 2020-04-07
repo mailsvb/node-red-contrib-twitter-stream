@@ -2,7 +2,7 @@
   "name": "node-red-contrib-twitter-stream",
   "version": "1.5.0",
   "description": "Node-red node for querying the Twitter streaming API",
-    "node-red": {
+  "node-red": {
     "nodes": {
       "twitter-stream": "twitter/twitter.js"
     }
@@ -12,17 +12,18 @@
     "url": "git+https://github.com/mailsvb/node-red-contrib-twitter-stream.git"
   },
   "keywords": [
-  	"node-red",
-  	"twitter",
-  	"stream",
+    "node-red",
+    "twitter",
+    "stream",
     "hashtags",
-  	"tweet",
-  	"geo",
-  	"location"
+    "tweet",
+    "geo",
+    "location"
   ],
   "dependencies": {
-    "twit": "*",
-    "https-proxy-agent": "*"
+    "between-range": "^1.0.0",
+    "https-proxy-agent": "*",
+    "twit": "*"
   },
   "author": {
     "name": "Sven",
@@ -30,7 +31,10 @@
     "url": "https://github.com/mailsvb"
   },
   "contributors": [
-    {"name":"Oliver Dawkins","url":"https://github.com/virtualarchitectures"}
+    {
+      "name": "Oliver Dawkins",
+      "url": "https://github.com/virtualarchitectures"
+    }
   ],
   "license": "MIT",
   "bugs": {
