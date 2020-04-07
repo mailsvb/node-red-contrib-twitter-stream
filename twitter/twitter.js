@@ -14,20 +14,15 @@ module.exports = function(RED) {
     function TwitterAPIConnection(n) {
         RED.nodes.createNode(this,n);
         var node = this;
-        node.consumerKey = n.consumerKey;
-        node.consumerSecret = n.consumerSecret;
-        node.accessToken = n.accessToken;
-        node.accessSecret = n.accessSecret;
-
-        var id = node.consumerKey;
-
+        
+        var id = n.connectionName;
         node.log('create new Twitter instance for: ' + id);
         
         clients[id] = new Twit({
-            consumer_key: node.consumerKey,
-            consumer_secret: node.consumerSecret,
-            access_token: node.accessToken,
-            access_token_secret: node.accessSecret
+            consumer_key: node.credentials.consumerKey,
+            consumer_secret: node.credentials.consumerSecret,
+            access_token: node.credentials.accessToken,
+            access_token_secret: node.credentials.accessSecret
         });
         
         node.client = clients[id];
@@ -37,7 +32,15 @@ module.exports = function(RED) {
             delete clients[id];
         });
     }
-    RED.nodes.registerType("twitter-api-connection",TwitterAPIConnection);
+
+    RED.nodes.registerType("twitter-api-connection",TwitterAPIConnection,{
+        credentials: {
+            consumerKey: {type: "password"},
+            consumerSecret: {type: "password"},
+            accessToken: {type: "password"},
+            accessSecret: {type:"password"}
+        }
+    });
 
     //Twitter stream
     function TwitterStream(n) {

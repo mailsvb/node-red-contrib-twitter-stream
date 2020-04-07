@@ -2,36 +2,69 @@
 
 <script type="text/x-red" data-template-name="twitter-api-connection">
     <div class="form-row">
+        <label for="node-config-input-connectionName" style="width:30%"><i class="icon-bookmark"></i> Connection Name</label>
+        <input type="text" id="node-config-input-connectionName" style="width:65%">
+    </div>
+    <div class="form-row">
         <label for="node-config-input-consumerKey" style="width:30%"><i class="icon-bookmark"></i> Consumer Key</label>
-        <input type="text" id="node-config-input-consumerKey" style="width:65%">
+        <input type="password" id="node-config-input-consumerKey" style="width:65%">
     </div>
     <div class="form-row">
         <label for="node-config-input-consumerSecret" style="width:30%"><i class="icon-bookmark"></i> Consumer Secret</label>
-        <input type="text" id="node-config-input-consumerSecret" style="width:65%">
+        <input type="password" id="node-config-input-consumerSecret" style="width:65%">
     </div>
     <div class="form-row">
         <label for="node-config-input-accessToken" style="width:30%"><i class="icon-bookmark"></i> Access Token</label>
-        <input type="text" id="node-config-input-accessToken" style="width:65%">
+        <input type="password" id="node-config-input-accessToken" style="width:65%">
     </div>
     <div class="form-row">
         <label for="node-config-input-accessSecret" style="width:30%"><i class="icon-bookmark"></i> Access Secret</label>
-        <input type="text" id="node-config-input-accessSecret" style="width:65%">
+        <input type="password" id="node-config-input-accessSecret" style="width:65%">
     </div>
 </script>
 
 <script type="text/javascript">
+(function() {
+    var twitterConfigNodeId = null;
+    var twitterConfigNodeIntervalId = null;
+
     RED.nodes.registerType('twitter-api-connection',{
         category: 'config',
         defaults: {
-            consumerKey: {value:"", required:true},
-            consumerSecret: {value:"", required:true},
-            accessToken: {value:"", required:true},
-            accessSecret: {value:"", required:true},
+            connectionName: {value:""}
+        },
+        credentials: {
+            consumerKey: { type: "password"},
+            consumerSecret: { type: "password" },
+            accessToken: {type: "password"},
+            accessSecret: {type:"password"}
         },
         label: function() {
-            return this.consumerKey;
+            if (this.connectionName) {
+                return (this.connectionName)
+            } else {
+                return "Twitter: "+this.id
+            }
+        },
+        //Ensure API credentials are not exportable
+        exportable: false,
+        oneditsave: function() {
+            var trimFields = [
+                "consumerKey",
+                "consumerSecret",
+                "accessToken",
+                "accessSecret"
+            ];
+            // Remove whitespace from the copy-paste of the fields
+            trimFields.forEach(function(field) {
+                var v = $("#node-config-input-"+field).val();
+                v = v.trim();
+                $("#node-config-input-"+field).val(v);
+
+            });
         }
     });
+})();
 </script>
 
 <!-- Twitter streaming API --> 
